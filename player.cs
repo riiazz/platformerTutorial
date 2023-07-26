@@ -3,37 +3,66 @@ using System;
 
 public partial class player : CharacterBody2D
 {
-	public const float Speed = 300.0f;
+	public const float Speed = 100.0f;
 	public const float JumpVelocity = -400.0f;
+	public const float ACCELERATION = 600f;
+	public const float FRICTION = 1000f;
 
 	// Get the gravity from the project settings to be synced with RigidBody nodes.
 	public float gravity = ProjectSettings.GetSetting("physics/2d/default_gravity").AsSingle();
 
 	public override void _PhysicsProcess(double delta)
-	{
-		Vector2 velocity = Velocity;
+    {
+        Vector2 velocity = Velocity;
 
-		// Add the gravity.
-		if (!IsOnFloor())
-			velocity.Y += gravity * (float)delta;
+        ApplyGravity(delta, ref velocity);
+        HandleJump(ref velocity);
+        Vector2 inputAxis = Input.GetVector("ui_left", "ui_right", "ui_up", "ui_down");
+        HandleAcceleration(delta, ref velocity, inputAxis);
+        ApplyFriction(delta, ref velocity, inputAxis);
 
-		// Handle Jump.
-		if (Input.IsActionJustPressed("ui_accept") && IsOnFloor())
-			velocity.Y = JumpVelocity;
+        Velocity = velocity;
+        MoveAndSlide();
+    }
 
-		// Get the input direction and handle the movement/deceleration.
-		// As good practice, you should replace UI actions with custom gameplay actions.
-		Vector2 direction = Input.GetVector("ui_left", "ui_right", "ui_up", "ui_down");
-		if (direction != Vector2.Zero)
-		{
-			velocity.X = direction.X * Speed;
+    private void HandleAcceleration(double delta, ref Vector2 velocity, Vector2 inputAxis)
+    {
+        if (inputAxis != Vector2.Zero)
+        {
+            velocity.X = Mathf.MoveToward(velocity.X, inputAxis.X * Speed, ACCELERATION * (float)delta);
+        }
+    }
+
+    private void ApplyFriction(double delta, ref Vector2 velocity, Vector2 inputAxis)
+    {
+		if(inputAxis == Vector2.Zero){
+			velocity.X = Mathf.MoveToward(Velocity.X, 0, FRICTION * (float)delta);
 		}
-		else
-		{
-			velocity.X = Mathf.MoveToward(Velocity.X, 0, Speed);
-		}
+    }
 
-		Velocity = velocity;
-		MoveAndSlide();
-	}
+    private void HandleJump(ref Vector2 velocity)
+    {
+        // Handle Jump.
+        if (IsOnFloor())
+        {
+            if (Input.IsActionJustPressed("ui_accept"))
+            {
+                velocity.Y = JumpVelocity;
+            }
+        }
+        else
+        {
+            if (Input.IsActionJustReleased("ui_accept") && velocity.Y < JumpVelocity / 2)
+            {
+                velocity.Y = JumpVelocity / 2;
+            }
+        }
+    }
+
+    private void ApplyGravity(double delta, ref Vector2 velocity)
+    {
+        // Add the gravity.
+        if (!IsOnFloor())
+            velocity.Y += gravity * (float)delta;
+    }
 }

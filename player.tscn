@@ -6,6 +6,8 @@
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_mgjr2"]
 
 [node name="Player" type="CharacterBody2D"]
+floor_constant_speed = true
+floor_max_angle = 1.39626
 script = ExtResource("1_cmsjo")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
