@@ -8,6 +8,7 @@ public partial class world : Node2D
 	private Polygon2D _polygon2D;
 	public override void _Ready()
 	{
+		RenderingServer.SetDefaultClearColor(Colors.Black);
 		_collisionPolygon2D = GetNode<CollisionPolygon2D>("StaticBody2D/CollisionPolygon2D");
 		_polygon2D = GetNode<Polygon2D>("StaticBody2D/CollisionPolygon2D/Polygon2D");
 		_polygon2D.Polygon = _collisionPolygon2D.Polygon;

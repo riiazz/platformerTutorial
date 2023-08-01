@@ -7,10 +7,16 @@ public partial class player : CharacterBody2D
 	public const float JumpVelocity = -400.0f;
 	public const float ACCELERATION = 600f;
 	public const float FRICTION = 1000f;
+    private AnimatedSprite2D animatedSprite2D;
 
 	// Get the gravity from the project settings to be synced with RigidBody nodes.
 	public float gravity = ProjectSettings.GetSetting("physics/2d/default_gravity").AsSingle();
 
+    public override void _Ready()
+    {
+        animatedSprite2D = GetNode<AnimatedSprite2D>("AnimatedSprite2D");
+    }
+    
 	public override void _PhysicsProcess(double delta)
     {
         Vector2 velocity = Velocity;
@@ -20,7 +26,7 @@ public partial class player : CharacterBody2D
         Vector2 inputAxis = Input.GetVector("ui_left", "ui_right", "ui_up", "ui_down");
         HandleAcceleration(delta, ref velocity, inputAxis);
         ApplyFriction(delta, ref velocity, inputAxis);
-
+        UpdateAnimation(inputAxis);
         Velocity = velocity;
         MoveAndSlide();
     }
@@ -64,5 +70,18 @@ public partial class player : CharacterBody2D
         // Add the gravity.
         if (!IsOnFloor())
             velocity.Y += gravity * (float)delta;
+    }
+
+    private void UpdateAnimation(Vector2 inputAxis){
+        if (inputAxis != Vector2.Zero){
+            animatedSprite2D.FlipH = (inputAxis < Vector2.Zero);
+            animatedSprite2D.Play("run");
+        } else{
+            animatedSprite2D.Play("idle");
+        }
+
+        if (!IsOnFloor()){
+            animatedSprite2D.Play("jump");
+        }
     }
 }
