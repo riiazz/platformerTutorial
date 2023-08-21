@@ -8,6 +8,7 @@ public partial class player : CharacterBody2D
 	public const float ACCELERATION = 600f;
 	public const float FRICTION = 1000f;
     private AnimatedSprite2D animatedSprite2D;
+    private Timer coyoteJumpTimer;
 
 	// Get the gravity from the project settings to be synced with RigidBody nodes.
 	public float gravity = ProjectSettings.GetSetting("physics/2d/default_gravity").AsSingle();
@@ -15,6 +16,7 @@ public partial class player : CharacterBody2D
     public override void _Ready()
     {
         animatedSprite2D = GetNode<AnimatedSprite2D>("AnimatedSprite2D");
+        coyoteJumpTimer = GetNode<Timer>("CoyoteJumpTimer");
     }
     
 	public override void _PhysicsProcess(double delta)
@@ -28,7 +30,12 @@ public partial class player : CharacterBody2D
         ApplyFriction(delta, ref velocity, inputAxis);
         UpdateAnimation(inputAxis);
         Velocity = velocity;
+        bool wasOnFloor = IsOnFloor();
         MoveAndSlide();
+        bool justLeftLedge = wasOnFloor && !IsOnFloor() && velocity.Y >= 0;
+        if (justLeftLedge){
+            coyoteJumpTimer.Start();
+        }
     }
 
     private void HandleAcceleration(double delta, ref Vector2 velocity, Vector2 inputAxis)
@@ -49,14 +56,14 @@ public partial class player : CharacterBody2D
     private void HandleJump(ref Vector2 velocity)
     {
         // Handle Jump.
-        if (IsOnFloor())
+        if (IsOnFloor() || coyoteJumpTimer.TimeLeft > 0)
         {
             if (Input.IsActionJustPressed("ui_accept"))
             {
                 velocity.Y = JumpVelocity;
             }
         }
-        else
+        else if (IsOnFloor())
         {
             if (Input.IsActionJustReleased("ui_accept") && velocity.Y < JumpVelocity / 2)
             {
